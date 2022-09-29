@@ -1,3 +1,5 @@
+mod icon;
+
 use wgpu::{include_wgsl, util::DeviceExt};
 use winit::{
     event::*,
@@ -36,15 +38,27 @@ impl Vertex {
 const VERTICES: &[Vertex] = &[
     Vertex {
         position: [0.0, 0.5, 0.0],
-        color: [1.0, 0.0, 0.0],
+        color: [1.0, 1.0, 1.0],
     },
     Vertex {
         position: [-0.5, -0.5, 0.0],
-        color: [0.0, 1.0, 0.0],
+        color: [1.0, 1.0, 1.0],
     },
     Vertex {
-        position: [0.5, -0.5, 0.0],
-        color: [0.0, 0.0, 1.0],
+        position: [0.7, -0.7, 0.0],
+        color: [1.0, 1.0, 1.0],
+    },
+    Vertex {
+        position: [0.7, 0.7, 0.0],
+        color: [1.0, 1.0, 1.0],
+    },
+    Vertex {
+        position: [1.0, -1.0, 0.0],
+        color: [1.0, 1.0, 1.0],
+    },
+    Vertex {
+        position: [1.0, 1.0, 0.0],
+        color: [1.0, 1.0, 1.0],
     },
 ];
 
@@ -131,7 +145,9 @@ impl State {
                 })],
             }),
             primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
+                // topology: wgpu::PrimitiveTopology::TriangleList,
+                topology: wgpu::PrimitiveTopology::LineList,
+                // topology: wgpu::PrimitiveTopology::LineStrip,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Back),
@@ -215,9 +231,9 @@ impl State {
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color {
-                                r: 0.1,
-                                g: 0.2,
-                                b: 0.3,
+                                r: 0.0,
+                                g: 0.0,
+                                b: 0.0,
                                 a: 1.0,
                             }),
                             store: true,
@@ -243,7 +259,20 @@ impl State {
 pub async fn run() {
     env_logger::init();
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let window = WindowBuilder::new()
+        .with_title("Planet Defender")
+        .with_inner_size(winit::dpi::PhysicalSize {
+            width: 500,
+            height: 500,
+        })
+        .with_resizable(false)
+        .with_window_icon(Some(
+            icon::ship_icon(),
+        ))
+        .build(&event_loop)
+        .unwrap();
+
+    // winit::window::Icon::from_rgba(vec![255, 256], 16, 16)
 
     let mut state = State::new(&window).await;
 
