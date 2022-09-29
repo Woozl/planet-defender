@@ -262,8 +262,8 @@ pub async fn run() {
     let window = WindowBuilder::new()
         .with_title("Planet Defender")
         .with_inner_size(winit::dpi::PhysicalSize {
-            width: 500,
-            height: 500,
+            width: 1000,
+            height: 1000,
         })
         .with_resizable(false)
         .with_window_icon(Some(
