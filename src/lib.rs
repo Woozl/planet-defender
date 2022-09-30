@@ -37,30 +37,10 @@ impl Vertex {
 
 const VERTICES: &[Vertex] = &[
     Vertex {
-        position: [0.0, 0.5, 0.0],
+        position: [0.0, 0.0, 0.0],
         color: [1.0, 1.0, 1.0],
-    },
-    Vertex {
-        position: [-0.5, -0.5, 0.0],
-        color: [1.0, 1.0, 1.0],
-    },
-    Vertex {
-        position: [0.7, -0.7, 0.0],
-        color: [1.0, 1.0, 1.0],
-    },
-    Vertex {
-        position: [0.7, 0.7, 0.0],
-        color: [1.0, 1.0, 1.0],
-    },
-    Vertex {
-        position: [1.0, -1.0, 0.0],
-        color: [1.0, 1.0, 1.0],
-    },
-    Vertex {
-        position: [1.0, 1.0, 0.0],
-        color: [1.0, 1.0, 1.0],
-    },
-];
+    }
+; 1024];
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
@@ -121,9 +101,9 @@ struct State {
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     num_vertices: u32,
-    camera: Camera,
-    camera_uniform: CameraUniform,
-    camera_buffer: wgpu::Buffer,
+    _camera: Camera,
+    _camera_uniform: CameraUniform,
+    _camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
 }
 
@@ -274,7 +254,7 @@ impl State {
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: bytemuck::cast_slice(VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
 
         let num_vertices = VERTICES.len() as u32;
@@ -288,9 +268,9 @@ impl State {
             render_pipeline,
             vertex_buffer,
             num_vertices,
-            camera,
-            camera_uniform,
-            camera_buffer,
+            _camera: camera,
+            _camera_uniform: camera_uniform,
+            _camera_buffer: camera_buffer,
             camera_bind_group
         }
     }
@@ -316,7 +296,46 @@ impl State {
     }
 
     fn update(&mut self) {
-        // todo!()
+        let vert_data = &[
+            // line 1:
+            Vertex {
+                position: [-0.3, -0.3, 0.0],
+                color: [1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: [0.3, -0.3, 0.0],
+                color: [1.0, 0.0, 0.0],
+            },
+            // line 2:
+            Vertex {
+                position: [0.3, -0.3, 0.0],
+                color: [0.0, 1.0, 0.0],
+            },
+            Vertex {
+                position: [0.3, 0.3, 0.0],
+                color: [0.0, 1.0, 0.0],
+            },
+            // line 3:
+            Vertex {
+                position: [0.3, 0.3, 0.0],
+                color: [0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [-0.3, 0.3, 0.0],
+                color: [0.0, 0.0, 1.0],
+            },
+            // line 4
+            Vertex {
+                position: [-0.3, 0.3, 0.0],
+                color: [1.0, 1.0, 0.0],
+            },
+            Vertex {
+                position: [-0.3, -0.3, 0.0],
+                color: [1.0, 1.0, 0.0],
+            },
+        ];
+
+        self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(vert_data));
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -378,8 +397,6 @@ pub async fn run() {
         .with_window_icon(Some(icon::ship_icon()))
         .build(&event_loop)
         .unwrap();
-
-    // winit::window::Icon::from_rgba(vec![255, 256], 16, 16)
 
     let mut state = State::new(&window).await;
 
