@@ -1,5 +1,7 @@
 mod icon;
+mod draw;
 
+use draw::Lines;
 use wgpu::{include_wgsl, util::DeviceExt};
 use winit::{
     event::*,
@@ -9,7 +11,7 @@ use winit::{
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex {
+pub struct Vertex {
     position: [f32; 3],
     color: [f32; 3],
 }
@@ -105,6 +107,9 @@ struct State {
     _camera_uniform: CameraUniform,
     _camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
+    lines: Lines,
+    cursor_x: u32,
+    cursor_y: u32,
 }
 
 impl State {
@@ -259,6 +264,8 @@ impl State {
 
         let num_vertices = VERTICES.len() as u32;
 
+        let lines = Lines::new();
+
         Self {
             surface,
             device,
@@ -271,7 +278,10 @@ impl State {
             _camera: camera,
             _camera_uniform: camera_uniform,
             _camera_buffer: camera_buffer,
-            camera_bind_group
+            camera_bind_group,
+            lines,
+            cursor_x: WIDTH / 2,
+            cursor_y: HEIGHT / 2
         }
     }
 
@@ -287,8 +297,10 @@ impl State {
     fn input(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
-                // print screen-space coords
-                println!("x: {}, y: {}", position.x, position.y);
+                self.cursor_x = position.x as u32;
+                self.cursor_y = position.y as u32;
+                self.lines.clear_lines();
+                self.lines.add_line((500, 500), (self.cursor_x, self.cursor_y));
                 true
             }
             WindowEvent::MouseInput { button, state, .. } => {
@@ -302,46 +314,7 @@ impl State {
     }
 
     fn update(&mut self) {
-        let vert_data = &[
-            // line 1:
-            Vertex {
-                position: [-0.3, -0.3, 0.0],
-                color: [1.0, 0.0, 0.0],
-            },
-            Vertex {
-                position: [0.3, -0.3, 0.0],
-                color: [1.0, 0.0, 0.0],
-            },
-            // line 2:
-            Vertex {
-                position: [0.3, -0.3, 0.0],
-                color: [0.0, 1.0, 0.0],
-            },
-            Vertex {
-                position: [0.3, 0.3, 0.0],
-                color: [0.0, 1.0, 0.0],
-            },
-            // line 3:
-            Vertex {
-                position: [0.3, 0.3, 0.0],
-                color: [0.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: [-0.3, 0.3, 0.0],
-                color: [0.0, 0.0, 1.0],
-            },
-            // line 4
-            Vertex {
-                position: [-0.3, 0.3, 0.0],
-                color: [1.0, 1.0, 0.0],
-            },
-            Vertex {
-                position: [-0.3, -0.3, 0.0],
-                color: [1.0, 1.0, 0.0],
-            },
-        ];
-
-        self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(vert_data));
+        self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&self.lines.vertices));
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -389,6 +362,9 @@ impl State {
         Ok(())
     }
 }
+
+pub const WIDTH: u32 = 1000;
+pub const HEIGHT: u32 = 1000;
 
 pub async fn run() {
     env_logger::init();
