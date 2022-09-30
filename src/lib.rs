@@ -1,7 +1,8 @@
 mod icon;
 mod draw;
+mod game;
 
-use draw::{LineHandler, Point};
+use game::Game;
 use wgpu::{include_wgsl, util::DeviceExt};
 use winit::{
     event::*,
@@ -107,9 +108,7 @@ struct State {
     _camera_uniform: CameraUniform,
     _camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
-    lines: LineHandler,
-    cursor_x: u32,
-    cursor_y: u32,
+    game: Game,
 }
 
 impl State {
@@ -264,7 +263,7 @@ impl State {
 
         let num_vertices = VERTICES.len() as u32;
 
-        let lines = LineHandler::new();
+        let game = Game::new();
 
         Self {
             surface,
@@ -279,9 +278,7 @@ impl State {
             _camera_uniform: camera_uniform,
             _camera_buffer: camera_buffer,
             camera_bind_group,
-            lines,
-            cursor_x: WIDTH / 2,
-            cursor_y: HEIGHT / 2
+            game,
         }
     }
 
@@ -297,15 +294,12 @@ impl State {
     fn input(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
-                self.cursor_x = position.x as u32;
-                self.cursor_y = position.y as u32;
-                self.lines.clear_lines();
-                self.lines.add_line(Point {x: 500, y: 500}, Point {x: self.cursor_x, y: self.cursor_y});
+                self.game.set_cursor(position.x as u32, position.y as u32);
                 true
             }
             WindowEvent::MouseInput { button, state, .. } => {
                 if let (MouseButton::Left, ElementState::Pressed) = (button, state) {
-                    println!("Left mouse pressed");
+                    self.game.fire();
                 }
                 true
             }
@@ -314,7 +308,8 @@ impl State {
     }
 
     fn update(&mut self) {
-        self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&self.lines.vertices));
+        self.game.draw();
+        self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&self.game.lines.vertices));
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {

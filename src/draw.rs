@@ -7,7 +7,7 @@ pub struct Point {
 }
 
 impl Point {
-    pub fn to_draw_space(self) -> DrawSpacePoint {
+    pub fn to_draw_space(&self) -> DrawSpacePoint {
         DrawSpacePoint {
             x: (self.x as f32 - (WIDTH as f32 / 2.0)) / (WIDTH as f32 / 2.0),
             y: -1.0 * ((self.y as f32 - (HEIGHT as f32 / 2.0)) / (HEIGHT as f32 / 2.0)),
@@ -22,7 +22,7 @@ pub struct DrawSpacePoint {
 }
 
 impl DrawSpacePoint {
-    pub fn _to_screen_space(self) -> Point {
+    pub fn _to_screen_space(&self) -> Point {
         Point {
             x: ((self.x * WIDTH as f32 / 2.0) + WIDTH as f32 / 2.0) as u32,
             y: ((-1.0 * self.y * HEIGHT as f32 / 2.0) + HEIGHT as f32 / 2.0) as u32,
@@ -41,7 +41,7 @@ impl LineHandler {
         }
     }
 
-    pub fn add_line(&mut self, p1: Point, p2: Point) {
+    pub fn add_line(&mut self, p1: &Point, p2: &Point) {
         let p1_ds = p1.to_draw_space();
         let p2_ds = p2.to_draw_space();
         
