@@ -291,6 +291,12 @@ impl State {
                 println!("x: {}, y: {}", position.x, position.y);
                 true
             }
+            WindowEvent::MouseInput { button, state, .. } => {
+                if let (MouseButton::Left, ElementState::Pressed) = (button, state) {
+                    println!("Left mouse pressed");
+                }
+                true
+            }
             _ => false,
         }
     }
