@@ -1,33 +1,56 @@
 use crate::{HEIGHT, WIDTH, Vertex};
 
-pub fn screen_space_to_draw_space(x: u32, y: u32) -> (f32, f32) {
-    (
-        ((x as f32 - (WIDTH as f32 / 2.0)) / (WIDTH as f32 / 2.0)),
-        -1.0 * ((y as f32 - (HEIGHT as f32 / 2.0)) / (HEIGHT as f32 / 2.0)),
-    )
+/// screen space representation, coordinates range from 0 .. screen size
+pub struct Point {
+    pub x: u32,
+    pub y: u32,
 }
 
-pub struct Lines {
+impl Point {
+    pub fn to_draw_space(self) -> DrawSpacePoint {
+        DrawSpacePoint {
+            x: (self.x as f32 - (WIDTH as f32 / 2.0)) / (WIDTH as f32 / 2.0),
+            y: -1.0 * ((self.y as f32 - (HEIGHT as f32 / 2.0)) / (HEIGHT as f32 / 2.0)),
+        }
+    }
+}
+
+/// internal representation: coordinates range from -1.0 .. 1.0
+pub struct DrawSpacePoint {
+    pub x: f32,
+    pub y: f32,
+}
+
+impl DrawSpacePoint {
+    pub fn _to_screen_space(self) -> Point {
+        Point {
+            x: ((self.x * WIDTH as f32 / 2.0) + WIDTH as f32 / 2.0) as u32,
+            y: ((-1.0 * self.y * HEIGHT as f32 / 2.0) + HEIGHT as f32 / 2.0) as u32,
+        }
+    }
+}
+
+pub struct LineHandler {
     pub vertices: Vec<Vertex>
 }
 
-impl Lines {
+impl LineHandler {
     pub fn new() -> Self {
-        Lines {
+        LineHandler {
             vertices: Vec::new(),
         }
     }
 
-    pub fn add_line(&mut self, p1: (u32, u32), p2: (u32, u32)) {
-        let (p1_x, p1_y) = screen_space_to_draw_space(p1.0, p1.1);
-        let (p2_x, p2_y) = screen_space_to_draw_space(p2.0, p2.1);
+    pub fn add_line(&mut self, p1: Point, p2: Point) {
+        let p1_ds = p1.to_draw_space();
+        let p2_ds = p2.to_draw_space();
         
         self.vertices.push(Vertex {
-            position: [p1_x, p1_y, 0.0],
+            position: [p1_ds.x, p1_ds.y, 0.0],
             color: [1.0, 1.0, 1.0]
         });
         self.vertices.push(Vertex {
-            position: [p2_x, p2_y, 0.0],
+            position: [p2_ds.x, p2_ds.y, 0.0],
             color: [1.0, 1.0, 1.0]
         });
     }

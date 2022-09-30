@@ -1,7 +1,7 @@
 mod icon;
 mod draw;
 
-use draw::Lines;
+use draw::{LineHandler, Point};
 use wgpu::{include_wgsl, util::DeviceExt};
 use winit::{
     event::*,
@@ -107,7 +107,7 @@ struct State {
     _camera_uniform: CameraUniform,
     _camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
-    lines: Lines,
+    lines: LineHandler,
     cursor_x: u32,
     cursor_y: u32,
 }
@@ -264,7 +264,7 @@ impl State {
 
         let num_vertices = VERTICES.len() as u32;
 
-        let lines = Lines::new();
+        let lines = LineHandler::new();
 
         Self {
             surface,
@@ -300,7 +300,7 @@ impl State {
                 self.cursor_x = position.x as u32;
                 self.cursor_y = position.y as u32;
                 self.lines.clear_lines();
-                self.lines.add_line((500, 500), (self.cursor_x, self.cursor_y));
+                self.lines.add_line(Point {x: 500, y: 500}, Point {x: self.cursor_x, y: self.cursor_y});
                 true
             }
             WindowEvent::MouseInput { button, state, .. } => {
