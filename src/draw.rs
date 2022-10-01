@@ -1,6 +1,7 @@
 use crate::{HEIGHT, WIDTH, Vertex};
 
 /// screen space representation, coordinates range from 0 .. screen size
+# [derive(Clone, Copy)]
 pub struct Point {
     pub x: u32,
     pub y: u32,
@@ -16,6 +17,7 @@ impl Point {
 }
 
 /// internal representation: coordinates range from -1.0 .. 1.0
+# [derive(Clone, Copy)]
 pub struct DrawSpacePoint {
     pub x: f32,
     pub y: f32,
