@@ -3,8 +3,8 @@ use crate::{HEIGHT, WIDTH, Vertex};
 /// screen space representation, coordinates range from 0 .. screen size
 # [derive(Clone, Copy)]
 pub struct Point {
-    pub x: i32,
-    pub y: i32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl Point {
@@ -26,8 +26,8 @@ pub struct DrawSpacePoint {
 impl DrawSpacePoint {
     pub fn _to_screen_space(&self) -> Point {
         Point {
-            x: ((self.x * WIDTH as f32 / 2.0) + WIDTH as f32 / 2.0) as i32,
-            y: ((-1.0 * self.y * HEIGHT as f32 / 2.0) + HEIGHT as f32 / 2.0) as i32,
+            x: ((self.x * WIDTH as f32 / 2.0) + WIDTH as f32 / 2.0),
+            y: ((-1.0 * self.y * HEIGHT as f32 / 2.0) + HEIGHT as f32 / 2.0),
         }
     }
 }

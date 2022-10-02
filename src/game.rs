@@ -11,8 +11,8 @@ pub struct Game {
     cur_y: u32,
     current_ms: u128,
     ball: Point,
-    vx: i32,
-    vy: i32,
+    vx: f32,
+    vy: f32,
 }
 
 impl Game {
@@ -25,9 +25,9 @@ impl Game {
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_millis(),
-            ball: Point { x: 200, y: 200 },
-            vx: 100,
-            vy: -100,
+            ball: Point { x: 0.0, y: 0.0 },
+            vx: 100.0,
+            vy: -100.0,
         }
     }
 
@@ -52,43 +52,43 @@ impl Game {
 
         // draw line based on cursor
         self.lines.add_line(
-            &Point { x: 500, y: 500 },
+            &Point { x: 500.0, y: 500.0 },
             &Point {
-                x: self.cur_x as i32,
-                y: self.cur_y as i32,
+                x: self.cur_x as f32,
+                y: self.cur_y as f32,
             },
         );
 
-        self.ball.x += ((self.vx as f32) * (dt as f32 / 1000.0)) as i32;
-        self.ball.y += ((self.vy as f32) * (dt as f32 / 1000.0)) as i32;
-        if self.ball.x< 0 {
-            self.ball.x = 0;
-            self.vx *= -1;
+        self.ball.x += self.vx * (dt as f32 / 1000.0);
+        self.ball.y += self.vy * (dt as f32 / 1000.0);
+        if self.ball.x < 0.0 {
+            self.ball.x = 0.0;
+            self.vx *= -1.0;
         }
-        if self.ball.x > WIDTH as i32 {
-            self.ball.x = WIDTH as i32;
-            self.vx *= -1;
+        if self.ball.x > WIDTH as f32 {
+            self.ball.x = WIDTH as f32;
+            self.vx *= -1.0;
         }
-        if self.ball.y < 0 {
-            self.ball.y = 0;
-            self.vy *= -1;
+        if self.ball.y < 0.0 {
+            self.ball.y = 0.0;
+            self.vy *= -1.0;
         }
-        if self.ball.y > HEIGHT as i32 {
-            self.ball.y = HEIGHT as i32;
-            self.vy *= -1;
+        if self.ball.y > HEIGHT as f32 {
+            self.ball.y = HEIGHT as f32;
+            self.vy *= -1.0;
         }
         // println!("{}, {}", self.ball.x, self.ball.y);
 
-        self.lines.add_line(&Point { x: 500, y: 500 }, &self.ball);
+        self.lines.add_line(&Point { x: 500.0, y: 500.0 }, &self.ball);
 
         self.draw_planet();
     }
 
     fn draw_planet(&mut self) {
-        let p1 = Point { x: 400, y: 400 };
-        let p2 = Point { x: 600, y: 400 };
-        let p3 = Point { x: 600, y: 600 };
-        let p4 = Point { x: 400, y: 600 };
+        let p1 = Point { x: 400.0, y: 400.0 };
+        let p2 = Point { x: 600.0, y: 400.0 };
+        let p3 = Point { x: 600.0, y: 600.0 };
+        let p4 = Point { x: 400.0, y: 600.0 };
 
         self.lines.add_line(&p1, &p2);
         self.lines.add_line(&p2, &p3);
