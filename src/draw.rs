@@ -43,7 +43,7 @@ impl LineHandler {
         }
     }
 
-    pub fn add_line(&mut self, p1: &Point, p2: &Point) {
+    pub fn add_line(&mut self, p1: Point, p2: Point) {
         let p1_ds = p1.to_draw_space();
         let p2_ds = p2.to_draw_space();
         

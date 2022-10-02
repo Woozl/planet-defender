@@ -25,7 +25,7 @@ impl Game {
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_millis(),
-            ball: Point { x: 0.0, y: 0.0 },
+            ball: Point { x: 200.0, y: 300.0 },
             vx: 100.0,
             vy: -100.0,
         }
@@ -52,8 +52,8 @@ impl Game {
 
         // draw line based on cursor
         self.lines.add_line(
-            &Point { x: 500.0, y: 500.0 },
-            &Point {
+            Point { x: 500.0, y: 500.0 },
+            Point {
                 x: self.cur_x as f32,
                 y: self.cur_y as f32,
             },
@@ -79,7 +79,7 @@ impl Game {
         }
         // println!("{}, {}", self.ball.x, self.ball.y);
 
-        self.lines.add_line(&Point { x: 500.0, y: 500.0 }, &self.ball);
+        self.lines.add_line(Point { x: 500.0, y: 500.0 }, self.ball);
 
         self.draw_planet();
     }
@@ -90,10 +90,10 @@ impl Game {
         let p3 = Point { x: 600.0, y: 600.0 };
         let p4 = Point { x: 400.0, y: 600.0 };
 
-        self.lines.add_line(&p1, &p2);
-        self.lines.add_line(&p2, &p3);
-        self.lines.add_line(&p3, &p4);
-        self.lines.add_line(&p4, &p1);
+        self.lines.add_line(p1, p2);
+        self.lines.add_line(p2, p3);
+        self.lines.add_line(p3, p4);
+        self.lines.add_line(p4, p1);
     }
 }
 
