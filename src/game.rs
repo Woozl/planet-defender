@@ -9,6 +9,7 @@ pub struct Game {
     pub lines: LineHandler,
     cur_x: u32,
     cur_y: u32,
+    cur_angle: f32,
     current_ms: u128,
     ball: Point,
     vx: f32,
@@ -21,6 +22,7 @@ impl Game {
             lines: LineHandler::new(),
             cur_x: HEIGHT / 2,
             cur_y: WIDTH / 2,
+            cur_angle: 0.0,
             current_ms: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
@@ -34,7 +36,10 @@ impl Game {
     pub fn set_cursor(&mut self, x: u32, y: u32) {
         self.cur_x = x;
         self.cur_y = y;
-        println!("x: {}, y: {}", self.cur_x, self.cur_y);
+        let local_x = self.cur_x as f32 - (WIDTH / 2) as f32;
+        let local_y = -1.0 * (self.cur_y as f32 - (HEIGHT / 2) as f32);
+        self.cur_angle = local_y.atan2(local_x).to_degrees();
+        // println!("x: {}, y: {}, th: {}", self.cur_x, self.cur_y, self.cur_angle);
     }
 
     pub fn fire(&mut self) {
