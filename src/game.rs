@@ -12,9 +12,6 @@ pub struct Game {
     cur_y: u32,
     cur_angle: f32,
     current_ms: u128,
-    ball: Point,
-    vx: f32,
-    vy: f32,
     planet_size: f32,
 }
 
@@ -29,9 +26,6 @@ impl Game {
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_millis(),
-            ball: Point { x: 200.0, y: 300.0 },
-            vx: 100.0,
-            vy: -100.0,
             planet_size: 100.0,
         }
     }
@@ -42,7 +36,6 @@ impl Game {
         let local_x = self.cur_x as f32 - (WIDTH / 2) as f32;
         let local_y = -1.0 * (self.cur_y as f32 - (HEIGHT / 2) as f32);
         self.cur_angle = local_y.atan2(local_x);
-        // println!("x: {}, y: {}, th: {}", self.cur_x, self.cur_y, self.cur_angle);
     }
 
     pub fn fire(&mut self) {
@@ -58,38 +51,32 @@ impl Game {
         let dt = new_time - self.current_ms;
         self.current_ms = new_time;
 
-        // draw line based on cursor
-        self.lines.add_line(
-            Point { x: 500.0, y: 500.0 },
-            Point {
-                x: self.cur_x as f32,
-                y: self.cur_y as f32,
-            },
-        );
-
-        self.ball.x += self.vx * (dt as f32 / 1000.0);
-        self.ball.y += self.vy * (dt as f32 / 1000.0);
-        if self.ball.x < 0.0 {
-            self.ball.x = 0.0;
-            self.vx *= -1.0;
-        }
-        if self.ball.x > WIDTH as f32 {
-            self.ball.x = WIDTH as f32;
-            self.vx *= -1.0;
-        }
-        if self.ball.y < 0.0 {
-            self.ball.y = 0.0;
-            self.vy *= -1.0;
-        }
-        if self.ball.y > HEIGHT as f32 {
-            self.ball.y = HEIGHT as f32;
-            self.vy *= -1.0;
-        }
-        // println!("{}, {}", self.ball.x, self.ball.y);
-
-        self.lines.add_line(Point { x: 500.0, y: 500.0 }, self.ball);
-
+        self.draw_ship();
         self.draw_planet();
+    }
+
+    fn draw_ship(&mut self) {
+        let angle_deg = self.cur_angle.to_degrees();
+        let side1_deg = angle_deg - 6.0;
+        let side2_deg = angle_deg + 6.0;
+        let distance = 30.0;
+
+        let pt1 = Point {
+            x: (distance + self.planet_size) * side1_deg.to_radians().cos() + (WIDTH / 2) as f32,
+            y: -(distance + self.planet_size) * side1_deg.to_radians().sin() + (HEIGHT / 2) as f32,
+        };
+        let pt2 = Point {
+            x: (distance + self.planet_size + 30.0) * angle_deg.to_radians().cos() + (WIDTH / 2) as f32,
+            y: -(distance + self.planet_size + 30.0) * angle_deg.to_radians().sin() + (HEIGHT / 2) as f32,
+        };
+        let pt3 = Point {
+            x: (distance + self.planet_size) * side2_deg.to_radians().cos() + (WIDTH / 2) as f32,
+            y: -(distance + self.planet_size) * side2_deg.to_radians().sin() + (HEIGHT / 2) as f32,
+        };
+
+        self.lines.add_line(pt1, pt2);
+        self.lines.add_line(pt2, pt3);
+        self.lines.add_line(pt3, pt1);
     }
 
     fn draw_planet(&mut self) {
