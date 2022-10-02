@@ -54,31 +54,29 @@ impl Game {
         self.lines.add_line(
             &Point { x: 500, y: 500 },
             &Point {
-                x: self.cur_x,
-                y: self.cur_y,
+                x: self.cur_x as i32,
+                y: self.cur_y as i32,
             },
         );
 
-        let mut actual_x = self.ball.x as i32 + ((self.vx as f32) * (dt as f32 / 100.0)) as i32;
-        let mut actual_y = self.ball.y as i32 + ((self.vy as f32) * (dt as f32 / 100.0)) as i32;
-        if actual_x < 0 {
-            actual_x = 0;
+        self.ball.x += ((self.vx as f32) * (dt as f32 / 1000.0)) as i32;
+        self.ball.y += ((self.vy as f32) * (dt as f32 / 1000.0)) as i32;
+        if self.ball.x< 0 {
+            self.ball.x = 0;
             self.vx *= -1;
         }
-        if actual_x > WIDTH as i32 {
-            actual_x = WIDTH as i32;
+        if self.ball.x > WIDTH as i32 {
+            self.ball.x = WIDTH as i32;
             self.vx *= -1;
         }
-        if actual_y < 0 {
-            actual_y = 0;
+        if self.ball.y < 0 {
+            self.ball.y = 0;
             self.vy *= -1;
         }
-        if actual_y > HEIGHT as i32 {
-            actual_y = HEIGHT as i32;
+        if self.ball.y > HEIGHT as i32 {
+            self.ball.y = HEIGHT as i32;
             self.vy *= -1;
         }
-        self.ball.x = actual_x as u32;
-        self.ball.y = actual_y as u32;
         // println!("{}, {}", self.ball.x, self.ball.y);
 
         self.lines.add_line(&Point { x: 500, y: 500 }, &self.ball);
