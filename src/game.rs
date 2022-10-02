@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
@@ -14,6 +15,7 @@ pub struct Game {
     ball: Point,
     vx: f32,
     vy: f32,
+    planet_size: f32,
 }
 
 impl Game {
@@ -30,6 +32,7 @@ impl Game {
             ball: Point { x: 200.0, y: 300.0 },
             vx: 100.0,
             vy: -100.0,
+            planet_size: 100.0,
         }
     }
 
@@ -38,7 +41,7 @@ impl Game {
         self.cur_y = y;
         let local_x = self.cur_x as f32 - (WIDTH / 2) as f32;
         let local_y = -1.0 * (self.cur_y as f32 - (HEIGHT / 2) as f32);
-        self.cur_angle = local_y.atan2(local_x).to_degrees();
+        self.cur_angle = local_y.atan2(local_x);
         // println!("x: {}, y: {}, th: {}", self.cur_x, self.cur_y, self.cur_angle);
     }
 
@@ -90,15 +93,33 @@ impl Game {
     }
 
     fn draw_planet(&mut self) {
-        let p1 = Point { x: 400.0, y: 400.0 };
-        let p2 = Point { x: 600.0, y: 400.0 };
-        let p3 = Point { x: 600.0, y: 600.0 };
-        let p4 = Point { x: 400.0, y: 600.0 };
+        self.planet_size = 100.0 + 10.0 * (self.current_ms as f64 / 500.0).sin() as f32;
 
-        self.lines.add_line(p1, p2);
-        self.lines.add_line(p2, p3);
-        self.lines.add_line(p3, p4);
-        self.lines.add_line(p4, p1);
+        let mut first_point = Point {
+            x: self.planet_size * 0.0f32.to_radians().cos() + (WIDTH / 2) as f32,
+            y: -self.planet_size * 0.0f32.to_radians().sin() + (HEIGHT / 2) as f32,
+        };
+        let mut last_point = first_point;
+        let mut current_point = first_point;
+        for theta in (0..360).step_by(6) {
+            let point_deviance = self.planet_size + rand::thread_rng().gen_range(-5.0..5.0);
+
+            current_point = Point {
+                x: point_deviance * (theta as f32).to_radians().cos() + (WIDTH / 2) as f32,
+                y: -1.0 * point_deviance * (theta as f32).to_radians().sin() + (HEIGHT / 2) as f32,
+            };
+
+            // save the first point to connect the last point up to it to complete the path
+            if theta == 0 {
+                first_point = current_point;
+            } else {
+                self.lines.add_line(last_point, current_point)
+            }
+
+            last_point = current_point;
+        }
+        // finish path
+        self.lines.add_line(current_point, first_point);
     }
 }
 
