@@ -309,6 +309,7 @@ impl State {
 
     fn update(&mut self) {
         self.game.draw();
+        self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&VERTICES));
         self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&self.game.lines.vertices));
     }
 

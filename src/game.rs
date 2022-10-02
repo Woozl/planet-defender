@@ -13,6 +13,8 @@ pub struct Game {
     cur_angle: f32,
     current_ms: u128,
     planet_size: f32,
+    distance: f32,
+    lasers: Vec<Laser>,
 }
 
 impl Game {
@@ -27,6 +29,8 @@ impl Game {
                 .unwrap()
                 .as_millis(),
             planet_size: 100.0,
+            distance: 30.0,
+            lasers: Vec::new(),
         }
     }
 
@@ -39,7 +43,16 @@ impl Game {
     }
 
     pub fn fire(&mut self) {
-        println!("Pew pew");
+        self.lasers.push(Laser {
+            loc: Point {
+                x: (self.distance + 30.0 + self.planet_size) * self.cur_angle.cos()
+                    + (WIDTH / 2) as f32,
+                y: -(self.distance + 30.0 + self.planet_size) * self.cur_angle.sin()
+                    + (HEIGHT / 2) as f32,
+            },
+            vx: 500.0 * self.cur_angle.cos(),
+            vy: -500.0 * self.cur_angle.sin(),
+        });
     }
 
     pub fn draw(&mut self) {
@@ -53,25 +66,67 @@ impl Game {
 
         self.draw_ship();
         self.draw_planet();
+        self.draw_lasers(dt);
+    }
+
+    fn draw_lasers(&mut self, dt: u128) {
+        fn laser_out_of_bounds(l: &Laser, epsilon: f32) -> bool {
+            l.loc.x < -epsilon
+            || l.loc.x > WIDTH as f32 + epsilon
+            || l.loc.y < -epsilon
+            || l.loc.y > HEIGHT as f32 + epsilon
+        }
+
+        let mut i = 0;
+        while i < self.lasers.len() {
+            // remove lasers outside the screen
+            if laser_out_of_bounds(&self.lasers[i], 30.0) {
+                self.lasers.remove(i);
+            } else {
+                let laser = &mut self.lasers[i];
+                
+                // update and draw laser if still in screen
+                laser.loc.x += laser.vx * (dt as f32 / 1000.0);
+                laser.loc.y += laser.vy * (dt as f32 / 1000.0);
+                
+                self.lines.add_line(
+                    Point {
+                        x: laser.loc.x + laser.vx * -30.0 / 500.0,
+                        y: laser.loc.y + laser.vy * -30.0 / 500.0,
+                    },
+                    Point {
+                        x: laser.loc.x,
+                        y: laser.loc.y,
+                    },
+                );
+
+                i += 1;
+            }
+        }
     }
 
     fn draw_ship(&mut self) {
         let angle_deg = self.cur_angle.to_degrees();
         let side1_deg = angle_deg - 6.0;
         let side2_deg = angle_deg + 6.0;
-        let distance = 30.0;
 
         let pt1 = Point {
-            x: (distance + self.planet_size) * side1_deg.to_radians().cos() + (WIDTH / 2) as f32,
-            y: -(distance + self.planet_size) * side1_deg.to_radians().sin() + (HEIGHT / 2) as f32,
+            x: (self.distance + self.planet_size) * side1_deg.to_radians().cos()
+                + (WIDTH / 2) as f32,
+            y: -(self.distance + self.planet_size) * side1_deg.to_radians().sin()
+                + (HEIGHT / 2) as f32,
         };
         let pt2 = Point {
-            x: (distance + self.planet_size + 30.0) * angle_deg.to_radians().cos() + (WIDTH / 2) as f32,
-            y: -(distance + self.planet_size + 30.0) * angle_deg.to_radians().sin() + (HEIGHT / 2) as f32,
+            x: (self.distance + self.planet_size + 30.0) * angle_deg.to_radians().cos()
+                + (WIDTH / 2) as f32,
+            y: -(self.distance + self.planet_size + 30.0) * angle_deg.to_radians().sin()
+                + (HEIGHT / 2) as f32,
         };
         let pt3 = Point {
-            x: (distance + self.planet_size) * side2_deg.to_radians().cos() + (WIDTH / 2) as f32,
-            y: -(distance + self.planet_size) * side2_deg.to_radians().sin() + (HEIGHT / 2) as f32,
+            x: (self.distance + self.planet_size) * side2_deg.to_radians().cos()
+                + (WIDTH / 2) as f32,
+            y: -(self.distance + self.planet_size) * side2_deg.to_radians().sin()
+                + (HEIGHT / 2) as f32,
         };
 
         self.lines.add_line(pt1, pt2);
@@ -108,4 +163,11 @@ impl Game {
         // finish path
         self.lines.add_line(current_point, first_point);
     }
+}
+
+#[derive(Debug)]
+struct Laser {
+    loc: Point,
+    vx: f32,
+    vy: f32,
 }
