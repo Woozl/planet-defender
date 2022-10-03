@@ -2,7 +2,7 @@ use rand::Rng;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
-    draw::{LineHandler, Point},
+    draw::{draw_text, LineHandler, Point},
     HEIGHT, WIDTH,
 };
 
@@ -11,6 +11,7 @@ pub struct Game {
     cur_x: u32,
     cur_y: u32,
     cur_angle: f32,
+    start_time: u128,
     current_ms: u128,
     planet_size: f32,
     distance: f32,
@@ -19,15 +20,18 @@ pub struct Game {
 
 impl Game {
     pub fn new() -> Self {
+        let start_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+
         Self {
             lines: LineHandler::new(),
             cur_x: HEIGHT / 2,
             cur_y: WIDTH / 2,
             cur_angle: 0.0,
-            current_ms: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_millis(),
+            start_time,
+            current_ms: start_time,
             planet_size: 100.0,
             distance: 30.0,
             lasers: Vec::new(),
@@ -63,18 +67,24 @@ impl Game {
             .as_millis();
         let dt = new_time - self.current_ms;
         self.current_ms = new_time;
+        let time_since_start_sec = (self.current_ms - self.start_time) as f64 / 1000.0;
 
         self.draw_ship();
         self.draw_planet();
         self.draw_lasers(dt);
+        self.draw_text(&format!("{:.2}", time_since_start_sec), 10.0, 10.0);
+    }
+
+    fn draw_text(&mut self, text: &str, x: f32, y: f32) {
+        draw_text(&mut self.lines, text, x, y);
     }
 
     fn draw_lasers(&mut self, dt: u128) {
         fn laser_out_of_bounds(l: &Laser, epsilon: f32) -> bool {
             l.loc.x < -epsilon
-            || l.loc.x > WIDTH as f32 + epsilon
-            || l.loc.y < -epsilon
-            || l.loc.y > HEIGHT as f32 + epsilon
+                || l.loc.x > WIDTH as f32 + epsilon
+                || l.loc.y < -epsilon
+                || l.loc.y > HEIGHT as f32 + epsilon
         }
 
         let mut i = 0;
@@ -84,11 +94,11 @@ impl Game {
                 self.lasers.remove(i);
             } else {
                 let laser = &mut self.lasers[i];
-                
+
                 // update and draw laser if still in screen
                 laser.loc.x += laser.vx * (dt as f32 / 1000.0);
                 laser.loc.y += laser.vy * (dt as f32 / 1000.0);
-                
+
                 self.lines.add_line(
                     Point {
                         x: laser.loc.x + laser.vx * -30.0 / 500.0,

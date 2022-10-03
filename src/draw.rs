@@ -61,3 +61,86 @@ impl LineHandler {
         self.vertices.clear();
     }
 }
+
+pub fn draw_text(lh: &mut LineHandler, text: &str, mut x: f32, y: f32) {
+    for char in text.chars() {
+        match char {
+            '0' => {
+                lh.add_line(Point {x, y}, Point { x, y: y + 40.0 });
+                lh.add_line(Point {x, y: y + 40.0 }, Point {x: x + 20.0, y: y + 40.0});
+                lh.add_line(Point {x: x + 20.0, y: y + 40.0}, Point {x: x + 20.0, y});
+                lh.add_line(Point {x: x + 20.0, y}, Point {x, y});
+                // lh.add_line(Point {x, y: y + 40.0}, Point {x: x + 20.0, y});
+            },
+            '1' => {
+                lh.add_line(Point {x, y: y + 40.0}, Point { x: x + 20.0, y: y + 40.0});
+                lh.add_line(Point {x: x + 10.0, y: y + 40.0}, Point { x: x + 10.0, y});
+                lh.add_line(Point {x: x + 10.0, y}, Point { x, y: y + 10.0});
+            },
+            '2' => {
+                lh.add_line(Point {x, y}, Point { x: x + 20.0, y });
+                lh.add_line(Point {x: x + 20.0, y }, Point { x: x + 20.0, y: y + 20.0 });
+                lh.add_line(Point {x: x + 20.0, y: y + 20.0 }, Point { x, y: y + 20.0 });
+                lh.add_line(Point {x, y: y + 20.0 }, Point { x, y: y + 40.0 });
+                lh.add_line(Point {x, y: y + 40.0 }, Point { x: x + 20.0, y: y + 40.0 });
+            },
+            '3' => {
+                lh.add_line(Point {x, y}, Point { x: x + 20.0, y });
+                lh.add_line(Point {x: x + 20.0, y}, Point { x: x + 20.0, y: y + 40.0 });
+                lh.add_line(Point {x: x + 20.0, y: y + 40.0}, Point { x, y: y + 40.0 });
+                lh.add_line(Point {x: x + 20.0, y: y + 20.0}, Point { x, y: y + 20.0 });
+            },
+            '4' => {
+                lh.add_line(Point {x, y}, Point {x, y: y + 20.0});
+                lh.add_line(Point {x, y: y + 20.0}, Point {x: x + 20.0, y: y + 20.0});
+                lh.add_line(Point {x: x + 20.0, y}, Point {x: x + 20.0, y: y + 40.0});
+                lh.add_line(Point {x: x + 20.0, y}, Point {x: x + 20.0, y: y + 40.0});
+            },
+            '5' => {
+                lh.add_line(Point {x: x + 20.0, y}, Point {x, y});
+                lh.add_line(Point {x, y}, Point {x, y: y + 20.0});
+                lh.add_line(Point {x, y: y + 20.0}, Point {x: x + 20.0, y: y + 20.0});
+                lh.add_line(Point {x: x + 20.0, y: y + 20.0}, Point {x: x + 20.0, y: y + 40.0});
+                lh.add_line(Point {x: x + 20.0, y: y + 40.0}, Point {x, y: y + 40.0});
+                
+            },
+            '6' => {
+                lh.add_line(Point {x: x + 20.0, y}, Point {x, y});
+                lh.add_line(Point {x, y}, Point {x, y: y + 40.0});
+                lh.add_line(Point {x, y: y + 40.0}, Point {x: x + 20.0, y: y + 40.0});
+                lh.add_line(Point {x: x + 20.0, y: y + 40.0}, Point {x: x + 20.0, y: y + 20.0});
+                lh.add_line(Point {x: x + 20.0, y: y + 20.0}, Point {x, y: y + 20.0});
+            },
+            '7' => {
+                lh.add_line(Point {x, y}, Point {x: x + 20.0, y});
+                lh.add_line(Point {x: x + 20.0, y}, Point {x, y: y + 40.0});
+            },
+            '8' => {
+                lh.add_line(Point {x, y}, Point { x, y: y + 40.0 });
+                lh.add_line(Point {x, y: y + 40.0 }, Point {x: x + 20.0, y: y + 40.0});
+                lh.add_line(Point {x: x + 20.0, y: y + 40.0}, Point {x: x + 20.0, y});
+                lh.add_line(Point {x: x + 20.0, y}, Point {x, y});
+                lh.add_line(Point {x, y: y + 20.0}, Point {x: x + 20.0, y: y + 20.0});
+            },
+            '9' => {
+                lh.add_line(Point{x,y}, Point {x: x + 20.0, y});
+                lh.add_line(Point{x: x + 20.0,y}, Point {x: x + 20.0, y: y + 40.0});
+                lh.add_line(Point{x: x + 20.0, y: y + 40.0}, Point {x, y: y + 40.0});
+                lh.add_line(Point{x,y}, Point {x, y: y + 20.0});
+                lh.add_line(Point{x, y: y + 20.0}, Point {x: x + 20.0, y: y + 20.0});
+            },
+            '.' => {
+                lh.add_line(Point {x, y: y + 40.0}, Point { x: x + 2.0, y: y + 40.0 });
+                lh.add_line(Point {x: x + 2.0, y: y + 40.0}, Point { x: x + 2.0, y: y + 38.0 });
+                lh.add_line(Point {x: x + 2.0, y: y + 38.0}, Point { x, y: y + 38.0 });
+                lh.add_line(Point {x, y: y + 38.0}, Point { x, y: y + 40.0 });
+                x -= 18.0;
+            }
+            _ => {
+                x -= 30.0;
+            },
+        };
+
+        x += 30.0;
+    }
+}
