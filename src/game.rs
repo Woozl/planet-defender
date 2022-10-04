@@ -73,10 +73,29 @@ impl Game {
         self.draw_planet();
         self.draw_lasers(dt);
         self.draw_text(&format!("{:.2}", time_since_start_sec), 10.0, 10.0);
+        self.draw_hearts(5, WIDTH as f32 - 10.0, 10.0);
     }
 
     fn draw_text(&mut self, text: &str, x: f32, y: f32) {
         draw_text(&mut self.lines, text, x, y);
+    }
+
+    #[rustfmt::skip]
+    fn draw_hearts(&mut self, hearts: i32, mut x: f32, y: f32) {
+        for _ in 0..hearts {
+            self.lines.add_line(Point {x: x - 5.0, y}, Point {x: x - 15.0, y});
+            self.lines.add_line(Point {x: x - 15.0, y}, Point {x: x - 20.0, y: y + 5.0});
+            self.lines.add_line(Point {x: x - 20.0, y: y + 5.0}, Point {x: x - 25.0, y});
+            self.lines.add_line(Point {x: x - 25.0, y}, Point {x: x - 35.0, y});
+            self.lines.add_line(Point {x: x - 35.0, y}, Point {x: x - 40.0, y: y + 5.0});
+            self.lines.add_line(Point {x: x - 40.0, y: y + 5.0}, Point {x: x - 40.0, y: y + 20.0});
+            self.lines.add_line(Point {x: x - 40.0, y: y + 20.0}, Point {x: x - 20.0, y: y + 40.0});
+            self.lines.add_line(Point {x: x - 20.0, y: y + 40.0}, Point {x, y: y + 20.0});
+            self.lines.add_line(Point {x, y: y + 20.0}, Point {x, y: y + 5.0});
+            self.lines.add_line(Point {x, y: y + 5.0}, Point {x: x - 5.0, y});
+
+            x -= 50.0;
+        }
     }
 
     fn draw_lasers(&mut self, dt: u128) {
