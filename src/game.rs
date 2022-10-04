@@ -1,5 +1,8 @@
 use rand::Rng;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    f32::consts::PI,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use crate::{
     draw::{draw_text, LineHandler, Point},
@@ -16,6 +19,7 @@ pub struct Game {
     planet_size: f32,
     distance: f32,
     lasers: Vec<Laser>,
+    asteroids: Vec<Asteroid>,
 }
 
 impl Game {
@@ -35,6 +39,7 @@ impl Game {
             planet_size: 100.0,
             distance: 30.0,
             lasers: Vec::new(),
+            asteroids: Vec::new(),
         }
     }
 
@@ -57,6 +62,8 @@ impl Game {
             vx: 500.0 * self.cur_angle.cos(),
             vy: -500.0 * self.cur_angle.sin(),
         });
+
+        self.add_asteroid(self.cur_x as f32, self.cur_y as f32, 0.0, 20.0);
     }
 
     pub fn draw(&mut self) {
@@ -74,6 +81,90 @@ impl Game {
         self.draw_lasers(dt);
         self.draw_text(&format!("{:.2}", time_since_start_sec), 10.0, 10.0);
         self.draw_hearts(5, WIDTH as f32 - 10.0, 10.0);
+        self.draw_asteroids(dt);
+    }
+
+    fn add_asteroid(&mut self, x: f32, y: f32, rot: f32, size: f32) {
+        let quadrant = [
+            rand::thread_rng().gen_range(0.0..=(PI / 2.0)),
+            rand::thread_rng().gen_range((PI / 2.0)..=PI),
+            rand::thread_rng().gen_range(PI..=(3.0 * PI / 2.0)),
+            rand::thread_rng().gen_range((3.0 * PI / 2.0)..=(2.0 * PI)),
+        ];
+
+        let p1 = Point {
+            x: size * quadrant[0].cos(),
+            y: -size * quadrant[0].sin(),
+        };
+        let p2 = Point {
+            x: size * quadrant[1].cos(),
+            y: -size * quadrant[1].sin(),
+        };
+        let p3 = Point {
+            x: size * quadrant[2].cos(),
+            y: -size * quadrant[2].sin(),
+        };
+        let p4 = Point {
+            x: size * quadrant[3].cos(),
+            y: -size * quadrant[3].sin(),
+        };
+
+        self.asteroids.push(Asteroid {
+            loc: Point { x, y },
+            p1: Point {
+                x: p1.x + x,
+                y: p1.y + y,
+            },
+            p2: Point {
+                x: p2.x + x,
+                y: p2.y + y,
+            },
+            p3: Point {
+                x: p3.x + x,
+                y: p3.y + y,
+            },
+            p4: Point {
+                x: p4.x + x,
+                y: p4.y + y,
+            },
+            vx: rand::thread_rng().gen_range(-100.0..100.0),
+            vy: rand::thread_rng().gen_range(-100.0..100.0),
+        });
+
+    }
+
+    fn draw_asteroids(&mut self, dt: u128) {
+        let mut i = 0;
+        while i < self.asteroids.len() {
+            let Asteroid {
+                // mut p1,
+                // mut p2,
+                // mut p3,
+                // mut p4,
+                vx,
+                vy,
+                // mut loc,
+                ..
+            } = self.asteroids[i];
+
+            self.asteroids[i].loc.x += vx * (dt as f32 / 1000.0);
+            self.asteroids[i].loc.y += vy * (dt as f32 / 1000.0);
+            self.asteroids[i].p1.x += vx * (dt as f32 / 1000.0);
+            self.asteroids[i].p1.y += vy * (dt as f32 / 1000.0);
+            self.asteroids[i].p2.x += vx * (dt as f32 / 1000.0);
+            self.asteroids[i].p2.y += vy * (dt as f32 / 1000.0);
+            self.asteroids[i].p3.x += vx * (dt as f32 / 1000.0);
+            self.asteroids[i].p3.y += vy * (dt as f32 / 1000.0);
+            self.asteroids[i].p4.x += vx * (dt as f32 / 1000.0);
+            self.asteroids[i].p4.y += vy * (dt as f32 / 1000.0);
+
+            self.lines.add_line(self.asteroids[i].p1, self.asteroids[i].p2);
+            self.lines.add_line(self.asteroids[i].p2, self.asteroids[i].p3);
+            self.lines.add_line(self.asteroids[i].p3, self.asteroids[i].p4);
+            self.lines.add_line(self.asteroids[i].p4, self.asteroids[i].p1);
+
+            i += 1;
+        }
     }
 
     fn draw_text(&mut self, text: &str, x: f32, y: f32) {
@@ -199,4 +290,14 @@ struct Laser {
     loc: Point,
     vx: f32,
     vy: f32,
+}
+
+struct Asteroid {
+    loc: Point,
+    vx: f32,
+    vy: f32,
+    p1: Point,
+    p2: Point,
+    p3: Point,
+    p4: Point,
 }
