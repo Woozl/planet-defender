@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{Rng, thread_rng};
 use std::{
     f32::consts::PI,
     time::{SystemTime, UNIX_EPOCH},
@@ -63,7 +63,7 @@ impl Game {
             vy: -500.0 * self.cur_angle.sin(),
         });
 
-        self.add_asteroid(self.cur_x as f32, self.cur_y as f32, 0.0, 20.0);
+        self.add_asteroid(20.0);
     }
 
     pub fn draw(&mut self) {
@@ -84,13 +84,24 @@ impl Game {
         self.draw_asteroids(dt);
     }
 
-    fn add_asteroid(&mut self, x: f32, y: f32, rot: f32, size: f32) {
+    fn add_asteroid(&mut self, size: f32) {
         let quadrant = [
             rand::thread_rng().gen_range(0.0..=(PI / 2.0)),
             rand::thread_rng().gen_range((PI / 2.0)..=PI),
             rand::thread_rng().gen_range(PI..=(3.0 * PI / 2.0)),
             rand::thread_rng().gen_range((3.0 * PI / 2.0)..=(2.0 * PI)),
         ];
+
+        let angle = rand::thread_rng().gen_range(0.0..(2.0 * PI));
+        let distance = 707.0;
+
+        let x = distance * angle.cos() + (WIDTH as f32 / 2.0);
+        let y = distance * angle.sin() + (HEIGHT as f32 / 2.0);
+
+        let velocity = rand::thread_rng().gen_range(50.0..150.0);
+
+        let vx = -velocity * angle.cos();
+        let vy = -velocity * angle.sin();
 
         let p1 = Point {
             x: size * quadrant[0].cos(),
@@ -127,43 +138,40 @@ impl Game {
                 x: p4.x + x,
                 y: p4.y + y,
             },
-            vx: rand::thread_rng().gen_range(-100.0..100.0),
-            vy: rand::thread_rng().gen_range(-100.0..100.0),
+            vx,
+            vy,
+            rotation_speed: PI / (if rand::thread_rng().gen_bool(0.5) {-1.0} else {1.0} * thread_rng().gen_range(200.0..500.00)),
+            // rotation_speed: PI / rand::thread_rng().gen_range(-100.0..100.0),
         });
+    }
 
+    fn asteroid_hit(&self, a: &Asteroid) -> bool {
+        let Asteroid { loc, .. } = a;
+        let Point { x, y } = loc;
+
+        ((x - WIDTH as f32 / 2.0).powf(2.0) + (y - HEIGHT as f32 / 2.0).powf(2.0)).sqrt()
+            < self.planet_size
     }
 
     fn draw_asteroids(&mut self, dt: u128) {
         let mut i = 0;
         while i < self.asteroids.len() {
-            let Asteroid {
-                // mut p1,
-                // mut p2,
-                // mut p3,
-                // mut p4,
-                vx,
-                vy,
-                // mut loc,
-                ..
-            } = self.asteroids[i];
+            if self.asteroid_hit(&self.asteroids[i]) {
+                self.asteroids.remove(i);
+            } else {
+                self.asteroids[i].update(dt);
 
-            self.asteroids[i].loc.x += vx * (dt as f32 / 1000.0);
-            self.asteroids[i].loc.y += vy * (dt as f32 / 1000.0);
-            self.asteroids[i].p1.x += vx * (dt as f32 / 1000.0);
-            self.asteroids[i].p1.y += vy * (dt as f32 / 1000.0);
-            self.asteroids[i].p2.x += vx * (dt as f32 / 1000.0);
-            self.asteroids[i].p2.y += vy * (dt as f32 / 1000.0);
-            self.asteroids[i].p3.x += vx * (dt as f32 / 1000.0);
-            self.asteroids[i].p3.y += vy * (dt as f32 / 1000.0);
-            self.asteroids[i].p4.x += vx * (dt as f32 / 1000.0);
-            self.asteroids[i].p4.y += vy * (dt as f32 / 1000.0);
+                self.lines
+                    .add_line(self.asteroids[i].p1, self.asteroids[i].p2);
+                self.lines
+                    .add_line(self.asteroids[i].p2, self.asteroids[i].p3);
+                self.lines
+                    .add_line(self.asteroids[i].p3, self.asteroids[i].p4);
+                self.lines
+                    .add_line(self.asteroids[i].p4, self.asteroids[i].p1);
 
-            self.lines.add_line(self.asteroids[i].p1, self.asteroids[i].p2);
-            self.lines.add_line(self.asteroids[i].p2, self.asteroids[i].p3);
-            self.lines.add_line(self.asteroids[i].p3, self.asteroids[i].p4);
-            self.lines.add_line(self.asteroids[i].p4, self.asteroids[i].p1);
-
-            i += 1;
+                i += 1;
+            }
         }
     }
 
@@ -300,4 +308,43 @@ struct Asteroid {
     p2: Point,
     p3: Point,
     p4: Point,
+    rotation_speed: f32,
+}
+
+impl Asteroid {
+    pub fn update(&mut self, dt: u128) {
+        // update position
+        self.loc.x += self.vx * (dt as f32 / 1000.0);
+        self.loc.y += self.vy * (dt as f32 / 1000.0);
+        self.p1.x += self.vx * (dt as f32 / 1000.0);
+        self.p1.y += self.vy * (dt as f32 / 1000.0);
+        self.p2.x += self.vx * (dt as f32 / 1000.0);
+        self.p2.y += self.vy * (dt as f32 / 1000.0);
+        self.p3.x += self.vx * (dt as f32 / 1000.0);
+        self.p3.y += self.vy * (dt as f32 / 1000.0);
+        self.p4.x += self.vx * (dt as f32 / 1000.0);
+        self.p4.y += self.vy * (dt as f32 / 1000.0);
+
+        // rotate points
+        fn rotate(mut pt: Point, loc: Point, angle: f32) -> Point {
+            pt.x -= loc.x;
+            pt.y -= loc.y;
+
+            let new_x = pt.x * angle.cos() - pt.y * angle.sin();
+            let new_y = pt.y * angle.cos() + pt.x * angle.sin();
+
+            pt.x = new_x;
+            pt.y = new_y;
+
+            pt.x += loc.x;
+            pt.y += loc.y;
+
+            Point { x: pt.x, y: pt.y }
+        }
+
+        self.p1 = rotate(self.p1, self.loc, self.rotation_speed);
+        self.p2 = rotate(self.p2, self.loc, self.rotation_speed);
+        self.p3 = rotate(self.p3, self.loc, self.rotation_speed);
+        self.p4 = rotate(self.p4, self.loc, self.rotation_speed);
+    }
 }
