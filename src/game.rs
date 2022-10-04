@@ -82,6 +82,40 @@ impl Game {
         self.draw_text(&format!("{:.2}", time_since_start_sec), 10.0, 10.0);
         self.draw_hearts(5, WIDTH as f32 - 10.0, 10.0);
         self.draw_asteroids(dt);
+        self.check_collision();
+    }
+
+    fn check_collision(&mut self) {
+        let mut a = 0;
+        while a < self.asteroids.len() {
+            let asteroid = &self.asteroids[a];
+
+            let mut collides_with_laser = false;
+            let mut l = 0;
+            while l < self.lasers.len() {
+                let laser = &self.lasers[l];
+                if distance(laser.loc, asteroid.loc) < 20.0 {
+                    collides_with_laser = true;
+                    break;
+                }
+                else {
+                    l += 1;
+                }
+            }
+
+            if collides_with_laser {
+                // remove asteroid + laser
+                self.asteroids.remove(a);
+                self.lasers.remove(l);
+            }
+            else {
+                a += 1;
+            }
+        }
+
+        fn distance(pt1: Point, pt2: Point) -> f32 {
+            ((pt2.x - pt1.x).powf(2.0) + (pt2.y - pt1.y).powf(2.0)).sqrt()
+        }
     }
 
     fn add_asteroid(&mut self, size: f32) {
