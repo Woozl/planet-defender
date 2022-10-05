@@ -1,6 +1,6 @@
-mod icon;
 mod draw;
 mod game;
+mod icon;
 
 use game::Game;
 use wgpu::{include_wgsl, util::DeviceExt};
@@ -38,12 +38,10 @@ impl Vertex {
     }
 }
 
-const VERTICES: &[Vertex] = &[
-    Vertex {
-        position: [0.0, 0.0, 0.0],
-        color: [1.0, 1.0, 1.0],
-    }
-; 1024];
+const VERTICES: &[Vertex] = &[Vertex {
+    position: [0.0, 0.0, 0.0],
+    color: [1.0, 1.0, 1.0],
+}; 1024];
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
@@ -181,9 +179,9 @@ impl State {
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
-        let camera_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
+        let camera_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[wgpu::BindGroupLayoutEntry {
                     binding: 0,
                     visibility: wgpu::ShaderStages::VERTEX,
                     ty: wgpu::BindingType::Buffer {
@@ -192,19 +190,16 @@ impl State {
                         min_binding_size: None,
                     },
                     count: None,
-                }
-            ],
-            label: Some("camera_bind_group_layout"),
-        });
+                }],
+                label: Some("camera_bind_group_layout"),
+            });
 
         let camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &camera_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: camera_buffer.as_entire_binding(),
-                }
-            ],
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: camera_buffer.as_entire_binding(),
+            }],
             label: Some("camera_bind_group"),
         });
 
@@ -303,14 +298,31 @@ impl State {
                 }
                 true
             }
+            WindowEvent::KeyboardInput {
+                input:
+                    KeyboardInput {
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::R),
+                        ..
+                    },
+                ..
+            } => {
+                self.game.restart();
+                true
+            },
             _ => false,
         }
     }
 
     fn update(&mut self) {
         self.game.draw();
-        self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&VERTICES));
-        self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&self.game.lines.vertices));
+        self.queue
+            .write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&VERTICES));
+        self.queue.write_buffer(
+            &self.vertex_buffer,
+            0,
+            bytemuck::cast_slice(&self.game.lines.vertices),
+        );
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {

@@ -1,4 +1,4 @@
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 use std::{
     f32::consts::PI,
     time::{SystemTime, UNIX_EPOCH},
@@ -16,6 +16,7 @@ pub struct Game {
     cur_angle: f32,
     start_time: u128,
     current_ms: u128,
+    game_time: u128,
     last_asteroid_time: u128,
     asteroid_spawn_rate: u128,
     planet_size: f32,
@@ -23,6 +24,8 @@ pub struct Game {
     lasers: Vec<Laser>,
     asteroids: Vec<Asteroid>,
     asteroids_destroyed: u32,
+    lives: u32,
+    is_game_over: bool,
 }
 
 impl Game {
@@ -39,6 +42,7 @@ impl Game {
             cur_angle: 0.0,
             start_time,
             current_ms: start_time,
+            game_time: 0,
             last_asteroid_time: start_time,
             asteroid_spawn_rate: 1000,
             planet_size: 100.0,
@@ -46,7 +50,17 @@ impl Game {
             lasers: Vec::new(),
             asteroids: Vec::new(),
             asteroids_destroyed: 0,
+            lives: 5,
+            is_game_over: false,
         }
+    }
+
+    pub fn restart(&mut self) {
+        self.is_game_over = false;
+        self.start_time = self.current_ms;
+        self.game_time = 0;
+        self.lives = 5;
+        self.asteroids_destroyed = 0;
     }
 
     pub fn set_cursor(&mut self, x: u32, y: u32) {
@@ -78,46 +92,60 @@ impl Game {
             .as_millis();
         let dt = new_time - self.current_ms;
         self.current_ms = new_time;
-        let time_since_start_sec = (self.current_ms - self.start_time) as f64 / 1000.0;
+
+        if self.lives <= 0 {
+            self.is_game_over = true;
+        }
+
+        if !self.is_game_over {
+            self.game_time = self.current_ms - self.start_time;
+        }
 
         if self.asteroids_destroyed < 30 {
+            self.asteroid_spawn_rate = 2000;
+        } else if self.asteroids_destroyed < 60 {
+            self.asteroid_spawn_rate = 1500;
+        } else if self.asteroids_destroyed < 80 {
+            self.asteroid_spawn_rate = 1200;
+        } else if self.asteroids_destroyed < 100 {
             self.asteroid_spawn_rate = 1000;
-        }
-        else if self.asteroids_destroyed < 60 {
-            self.asteroid_spawn_rate = 700;
-        }
-        else if self.asteroids_destroyed < 80 {
-            self.asteroid_spawn_rate = 500;
-        }
-        else if self.asteroids_destroyed < 100 {
+        } else if self.asteroids_destroyed < 120 {
+            self.asteroid_spawn_rate = 800;
+        } else if self.asteroids_destroyed < 150 {
+            self.asteroid_spawn_rate = 600;
+        } else {
             self.asteroid_spawn_rate = 400;
         }
-        else if self.asteroids_destroyed < 120 {
-            self.asteroid_spawn_rate = 300;
-        }
-        else if self.asteroids_destroyed < 150 {
-            self.asteroid_spawn_rate = 200;
-        } else {
-            self.asteroid_spawn_rate = 100;
-        }
 
-        println!("{}", self.asteroid_spawn_rate);
-        if self.current_ms - self.last_asteroid_time > self.asteroid_spawn_rate {
+        if !self.is_game_over
+            && self.current_ms - self.last_asteroid_time > self.asteroid_spawn_rate
+        {
             self.add_asteroid(20.0);
             self.last_asteroid_time = self.current_ms;
         }
 
+        if self.is_game_over {
+            self.draw_game_over();
+        }
         self.draw_ship();
         self.draw_planet();
         self.draw_lasers(dt);
-        self.draw_text(&format!("{:.2}", time_since_start_sec), 10.0, 10.0);
+        self.draw_text(
+            &format!("{:.2}", self.game_time as f64 / 1000.0),
+            10.0,
+            10.0,
+        );
         self.draw_text(&format!("{}", self.asteroids_destroyed), 500.0, 10.0);
-        self.draw_hearts(5, WIDTH as f32 - 10.0, 10.0);
+        self.draw_hearts(self.lives, WIDTH as f32 - 10.0, 10.0);
         self.draw_asteroids(dt);
         self.check_collision();
     }
 
     fn check_collision(&mut self) {
+        if self.is_game_over {
+            return;
+        }
+
         let mut a = 0;
         while a < self.asteroids.len() {
             let asteroid = &self.asteroids[a];
@@ -130,8 +158,7 @@ impl Game {
                     collides_with_laser = true;
                     self.asteroids_destroyed += 1;
                     break;
-                }
-                else {
+                } else {
                     l += 1;
                 }
             }
@@ -140,8 +167,7 @@ impl Game {
                 // remove asteroid + laser
                 self.asteroids.remove(a);
                 self.lasers.remove(l);
-            }
-            else {
+            } else {
                 a += 1;
             }
         }
@@ -207,7 +233,12 @@ impl Game {
             },
             vx,
             vy,
-            rotation_speed: PI / (if rand::thread_rng().gen_bool(0.5) {-1.0} else {1.0} * thread_rng().gen_range(200.0..500.00)),
+            rotation_speed: PI
+                / (if rand::thread_rng().gen_bool(0.5) {
+                    -1.0
+                } else {
+                    1.0
+                } * thread_rng().gen_range(200.0..500.00)),
             // rotation_speed: PI / rand::thread_rng().gen_range(-100.0..100.0),
         });
     }
@@ -220,11 +251,46 @@ impl Game {
             < self.planet_size
     }
 
+    fn draw_game_over(&mut self) {
+        self.lines
+            .add_line(Point { x: 460.0, y: 530.0 }, Point { x: 540.0, y: 530.0 });
+        self.lines
+            .add_line(Point { x: 460.0, y: 530.0 }, Point { x: 440.0, y: 550.0 });
+        self.lines
+            .add_line(Point { x: 540.0, y: 530.0 }, Point { x: 560.0, y: 550.0 });
+        self.lines
+            .add_line(Point { x: 460.0, y: 470.0 }, Point { x: 460.0, y: 440.0 });
+        self.lines
+            .add_line(Point { x: 540.0, y: 470.0 }, Point { x: 540.0, y: 440.0 });
+
+        self.lines
+            .add_line(Point { x: 480.0, y: 200.0 }, Point { x: 480.0, y: 280.0 });
+        self.lines
+            .add_line(Point { x: 480.0, y: 200.0 }, Point { x: 520.0, y: 200.0 });
+        self.lines
+            .add_line(Point { x: 520.0, y: 200.0 }, Point { x: 520.0, y: 240.0 });
+        self.lines
+            .add_line(Point { x: 520.0, y: 240.0 }, Point { x: 480.0, y: 240.0 });
+        self.lines
+            .add_line(Point { x: 480.0, y: 240.0 }, Point { x: 520.0, y: 280.0 });
+        self.lines
+            .add_line(Point { x: 460.0, y: 210.0 }, Point { x: 460.0, y: 190.0 });
+        self.lines
+            .add_line(Point { x: 450.0, y: 210.0 }, Point { x: 450.0, y: 190.0 });
+        self.lines
+            .add_line(Point { x: 540.0, y: 210.0 }, Point { x: 540.0, y: 190.0 });
+        self.lines
+            .add_line(Point { x: 550.0, y: 210.0 }, Point { x: 550.0, y: 190.0 });
+    }
+
     fn draw_asteroids(&mut self, dt: u128) {
         let mut i = 0;
         while i < self.asteroids.len() {
             if self.asteroid_hit(&self.asteroids[i]) {
                 self.asteroids.remove(i);
+                if self.lives > 0 {
+                    self.lives -= 1;
+                }
             } else {
                 self.asteroids[i].update(dt);
 
@@ -247,7 +313,7 @@ impl Game {
     }
 
     #[rustfmt::skip]
-    fn draw_hearts(&mut self, hearts: i32, mut x: f32, y: f32) {
+    fn draw_hearts(&mut self, hearts: u32, mut x: f32, y: f32) {
         for _ in 0..hearts {
             self.lines.add_line(Point {x: x - 5.0, y}, Point {x: x - 15.0, y});
             self.lines.add_line(Point {x: x - 15.0, y}, Point {x: x - 20.0, y: y + 5.0});
