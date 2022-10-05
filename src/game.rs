@@ -16,10 +16,13 @@ pub struct Game {
     cur_angle: f32,
     start_time: u128,
     current_ms: u128,
+    last_asteroid_time: u128,
+    asteroid_spawn_rate: u128,
     planet_size: f32,
     distance: f32,
     lasers: Vec<Laser>,
     asteroids: Vec<Asteroid>,
+    asteroids_destroyed: u32,
 }
 
 impl Game {
@@ -36,10 +39,13 @@ impl Game {
             cur_angle: 0.0,
             start_time,
             current_ms: start_time,
+            last_asteroid_time: start_time,
+            asteroid_spawn_rate: 1000,
             planet_size: 100.0,
             distance: 30.0,
             lasers: Vec::new(),
             asteroids: Vec::new(),
+            asteroids_destroyed: 0,
         }
     }
 
@@ -62,8 +68,6 @@ impl Game {
             vx: 500.0 * self.cur_angle.cos(),
             vy: -500.0 * self.cur_angle.sin(),
         });
-
-        self.add_asteroid(20.0);
     }
 
     pub fn draw(&mut self) {
@@ -76,10 +80,38 @@ impl Game {
         self.current_ms = new_time;
         let time_since_start_sec = (self.current_ms - self.start_time) as f64 / 1000.0;
 
+        if self.asteroids_destroyed < 30 {
+            self.asteroid_spawn_rate = 1000;
+        }
+        else if self.asteroids_destroyed < 60 {
+            self.asteroid_spawn_rate = 700;
+        }
+        else if self.asteroids_destroyed < 80 {
+            self.asteroid_spawn_rate = 500;
+        }
+        else if self.asteroids_destroyed < 100 {
+            self.asteroid_spawn_rate = 400;
+        }
+        else if self.asteroids_destroyed < 120 {
+            self.asteroid_spawn_rate = 300;
+        }
+        else if self.asteroids_destroyed < 150 {
+            self.asteroid_spawn_rate = 200;
+        } else {
+            self.asteroid_spawn_rate = 100;
+        }
+
+        println!("{}", self.asteroid_spawn_rate);
+        if self.current_ms - self.last_asteroid_time > self.asteroid_spawn_rate {
+            self.add_asteroid(20.0);
+            self.last_asteroid_time = self.current_ms;
+        }
+
         self.draw_ship();
         self.draw_planet();
         self.draw_lasers(dt);
         self.draw_text(&format!("{:.2}", time_since_start_sec), 10.0, 10.0);
+        self.draw_text(&format!("{}", self.asteroids_destroyed), 500.0, 10.0);
         self.draw_hearts(5, WIDTH as f32 - 10.0, 10.0);
         self.draw_asteroids(dt);
         self.check_collision();
@@ -96,6 +128,7 @@ impl Game {
                 let laser = &self.lasers[l];
                 if distance(laser.loc, asteroid.loc) < 20.0 {
                     collides_with_laser = true;
+                    self.asteroids_destroyed += 1;
                     break;
                 }
                 else {
