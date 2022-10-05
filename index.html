@@ -10,8 +10,6 @@
         display: flex;
         justify-content: center;
         align-items: center;
-
-        /* background-color: rgb(30, 34, 37); */
         background-color: black;
       }
 
@@ -24,6 +22,11 @@
   </head>
   <body id="planet-defender">
     <noscript>This page contains Webassembly and Javascript content, please enable Javascript in your browser.</noscript>
-    <script src="./bootstrap.js"></script>
+    <script type="module">
+        import init from "./pkg/planet_defender.js";
+        init().then(() => {
+            console.log("WASM Loaded");
+        });
+    </script>
   </body>
 </html>
