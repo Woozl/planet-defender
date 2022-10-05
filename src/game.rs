@@ -61,6 +61,7 @@ impl Game {
         self.game_time = 0;
         self.lives = 5;
         self.asteroids_destroyed = 0;
+        self.asteroids.clear();
     }
 
     pub fn set_cursor(&mut self, x: u32, y: u32) {
