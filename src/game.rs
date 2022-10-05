@@ -1,7 +1,7 @@
+use instant::Instant;
 use rand::{thread_rng, Rng};
 use std::{
     f32::consts::PI,
-    time::{SystemTime, UNIX_EPOCH},
 };
 
 use crate::{
@@ -14,6 +14,7 @@ pub struct Game {
     cur_x: u32,
     cur_y: u32,
     cur_angle: f32,
+    program_begin: Instant,
     start_time: u128,
     current_ms: u128,
     game_time: u128,
@@ -30,16 +31,15 @@ pub struct Game {
 
 impl Game {
     pub fn new() -> Self {
-        let start_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
+        let program_begin = Instant::now();
+        let start_time = Instant::now().duration_since(program_begin).as_millis();
 
         Self {
             lines: LineHandler::new(),
             cur_x: HEIGHT / 2,
             cur_y: WIDTH / 2,
             cur_angle: 0.0,
+            program_begin,
             start_time,
             current_ms: start_time,
             game_time: 0,
@@ -86,10 +86,7 @@ impl Game {
 
     pub fn draw(&mut self) {
         self.lines.clear_lines();
-        let new_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
+        let new_time = Instant::now().duration_since(self.program_begin).as_millis();
         let dt = new_time - self.current_ms;
         self.current_ms = new_time;
 
@@ -142,10 +139,6 @@ impl Game {
     }
 
     fn check_collision(&mut self) {
-        if self.is_game_over {
-            return;
-        }
-
         let mut a = 0;
         while a < self.asteroids.len() {
             let asteroid = &self.asteroids[a];
@@ -156,7 +149,9 @@ impl Game {
                 let laser = &self.lasers[l];
                 if distance(laser.loc, asteroid.loc) < 20.0 {
                     collides_with_laser = true;
-                    self.asteroids_destroyed += 1;
+                    if !self.is_game_over {
+                        self.asteroids_destroyed += 1;
+                    }
                     break;
                 } else {
                     l += 1;

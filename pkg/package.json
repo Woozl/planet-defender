@@ -1,0 +1,13 @@
+{
+  "name": "planet_defender",
+  "version": "0.1.0",
+  "files": [
+    "planet_defender_bg.wasm",
+    "planet_defender.js",
+    "planet_defender_bg.js",
+    "planet_defender.d.ts"
+  ],
+  "module": "planet_defender.js",
+  "types": "planet_defender.d.ts",
+  "sideEffects": false
+}
